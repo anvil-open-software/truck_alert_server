@@ -1,0 +1,5 @@
+# Copyright 2018 Dematic, Corp.
+# Licensed under the MIT Open Source License: https://opensource.org/licenses/MIT
+name: truck-alert-server
+version: 1.0.0
+description: Server for truck alert.

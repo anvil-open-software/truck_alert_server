@@ -1,0 +1,43 @@
+# Copyright 2018 Dematic, Corp.
+# Licensed under the MIT Open Source License: https://opensource.org/licenses/MIT
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-depl
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      component: backend
+      application: truck-alert
+      service: server
+  template:
+    metadata:
+      labels:
+        heritage: {{  .Release.Service  }}
+        release: {{  .Release.Name  }}
+        chart: {{  .Chart.Name  }}-{{  .Chart.Version | replace "+" "_"  }}
+        app: {{ .Chart.Name }}
+        component: backend
+        application: truck-alert
+        service: server
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: application
+          image: us.gcr.io/dlabs-dev-primary/alert_collector:{{  .Chart.Version  }}
+          ports:
+            - name: rest
+              containerPort: 8080
+          volumeMounts:
+            - name: rocksdb-volume
+              mountPath: /opt/dlabs/store
+            - name: application-configuration
+              mountPath: /opt/dlabs/conf
+      volumes:
+        - name: rocksdb-volume
+          emptyDir: {}
+        - name: application-configuration
+          configMap:
+            name: application-configuration

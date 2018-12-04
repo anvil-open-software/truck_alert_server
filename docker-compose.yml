@@ -1,0 +1,52 @@
+# Copyright 2018 Dematic, Corp.
+# Licensed under the MIT Open Source License: https://opensource.org/licenses/MIT
+version: '2.4'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:3.4.6
+    ports:
+      - "2181"
+  kafka:
+    image: wurstmeister/kafka:2.11-1.1.0
+    depends_on:
+      - zookeeper
+    links:
+      - zookeeper
+    ports:
+      - "9092"
+    environment:
+      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      LOG4J_LOGGER_KAFKA: "WARN"
+      KAFKA_CREATE_TOPICS: "my-topic:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  alert_generator:
+    image: us.gcr.io/dlabs-dev-primary/alert_generator
+    depends_on:
+      - kafka
+      - server
+    links:
+      - kafka
+    volumes:
+      - ./src/test/docker/kafka/conf:/opt/dlabs/conf:ro
+  server:
+    image: us.gcr.io/dlabs-dev-primary/alert_collector
+    depends_on:
+      - kafka
+    links:
+      - kafka
+    ports:
+      - "8080"
+    volumes:
+      - ./src/test/docker/kafka/conf:/opt/dlabs/conf:ro
+  ui:
+    image: us.gcr.io/dlabs-dev-primary/truck-alert-ui:1.15.1
+    depends_on:
+      - server
+    ports:
+      - "80:3000"
+    volumes:
+      - ./src/test/docker/ui/conf/config.prod.json:/home/app/www/server/configuration/config.prod.json:ro

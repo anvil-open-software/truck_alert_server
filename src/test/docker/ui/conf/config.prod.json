@@ -1,0 +1,6 @@
+{
+  "db": "mongodb://localhost/bff",
+  "secret": "myProdSecret",
+  "truck_server_host": "http://server",
+  "truck_server_port": ":8080"
+}
